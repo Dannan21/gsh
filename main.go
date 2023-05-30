@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var path, err = os.Getwd()
-
 func main() {
 	//Abrindo o buffer para ler o input
 	reader := bufio.NewReader(os.Stdin)
@@ -24,12 +22,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	path, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	for {
+		path, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err)
+		}
 		//Printa o usuario
 		fmt.Print(user.Username + "@" + hostname + " " + path + " $ ")
 		input, err := reader.ReadString('\n')
@@ -51,6 +49,10 @@ func execCmd(cmd string) error {
 	cmd = strings.TrimSuffix(cmd, "\n")
 	args := strings.Split(cmd, " ")
 	command := exec.Command(args[0], args[1:]...)
+	user, err := user.Current()
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//Syncando com o Standart Output e Standart error
 	command.Stdout = os.Stdout
@@ -60,11 +62,10 @@ func execCmd(cmd string) error {
 	switch args[0] {
 	case "cd":
 		if len(args) < 2 {
-			return fmt.Errorf("cd: not enough arguments")
+			return os.Chdir("/home/" + user.Username)
+		} else {
+			return os.Chdir(args[1])
 		}
-		path = args[1]
-
-		return os.Chdir(args[1])
 	case "exit":
 		os.Exit(0)
 	}
